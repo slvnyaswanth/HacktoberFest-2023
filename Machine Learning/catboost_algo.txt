@@ -1,0 +1,310 @@
+
+# **CatBoost Classifier in Python** 
+
+
+
+Hello friends,
+
+
+In our machine learning journey, all of us have to deal with categorical data at some point of time. In sklearn, we are required to convert these categories into the numerical format. In order to do this conversion, we use several pre-processing methods like “label encoding”, “one hot encoding” and others.
+
+
+In this kernel, we will discuss an open sourced library - **CatBoost** developed and contributed by Yandex. CatBoost can use categorical features directly and is scalable in nature.
+
+
+So, let's get started.
+
+
+# **Table of Contents**
+
+1. [Introduction to CatBoost](#1)
+1. [Advantages of CatBoost library](#2)
+1. [Comparision of CatBoost and other Boosting algorithms](#3)
+1. [Implementation of CatBoost in Python](#4)
+    - [4.1	Load libraries](#4.1)
+    - [4.2	Read dataset](#4.2)
+    - [4.3	EDA](#4.3)
+    - [4.4 Data preparation](#4.4)
+    - [4.5 Split data into training and validation set](#4.5)
+    - [4.6 CatBoost implementation](#4.6)
+    - [4.7 Stdout of the training](#4.7)
+    - [4.8 Model predictions](#4.8)
+    - [4.9 Metrics calculation and graph plotting](#4.9)
+1. [Results and Conclusion](#5)
+
+# **1. Introduction to CatBoost** 
+
+[Table of Contents](#0.1)
+
+
+- CatBoost documentation says that-
+
+  **"CatBoost is a high-performance open source library for gradient boosting on decision trees.""**
+  
+  
+- So, CatBoost is an algorithm for gradient boosting on decision trees. 
+
+
+- It is a readymade classifier in scikit-learn’s conventions terms that would deal with categorical features automatically.
+
+
+- It can easily integrate with deep learning frameworks like Google’s TensorFlow and Apple’s Core ML. 
+
+
+- It can work with diverse data types to help solve a wide range of problems (described later) that businesses face today. 
+
+
+- It is developed by Yandex researchers and engineers, and is used for search, recommendation systems, personal assistant, self-driving cars, weather prediction and many other tasks.
+
+
+- Also, it provides best-in-class accuracy.
+
+
+- It is especially powerful in two ways:
+
+
+  - 1.It yields state-of-the-art results without extensive data training typically required by other machine learning methods, and
+  
+  - 2.Provides powerful out-of-the-box support for the more descriptive data formats that accompany many business problems.
+
+
+- **“CatBoost”** name comes from two words - **“Category”** and **“Boosting”**.
+
+
+- It works well with multiple categories of data, such as audio, text, image including historical data.
+
+
+- **“Boost”** comes from gradient boosting machine learning algorithm as this library is based on gradient boosting library. Gradient boosting is a powerful machine learning algorithm that is widely applied to multiple types of business challenges like fraud detection, recommendation items, forecasting and it performs well also. It can also return very good results with relatively less data, unlike DL models that need to learn from a massive amount of data.
+
+
+- It is in open-source and can be used by anyone.
+
+# **2. Advantages of CatBoost library** 
+
+[Table of Contents](#0.1)
+
+
+Advantages of CatBoost library are as follows:-
+
+
+- **Performance**: CatBoost provides state of the art results and it is competitive with any leading machine learning algorithm on the performance front.
+
+
+- **Handling Categorical features automatically**: We can use CatBoost without any explicit pre-processing to convert categories into numbers. CatBoost converts categorical values into numbers using various statistics on combinations of categorical features and combinations of categorical and numerical features. 
+
+
+- **Robust**: It reduces the need for extensive hyper-parameter tuning and lower the chances of overfitting also which leads to more generalized models. Although, CatBoost has multiple parameters to tune and it contains parameters like the number of trees, learning rate, regularization, tree depth, fold size, bagging temperature and others. 
+
+
+- **Easy-to-use**: We can use CatBoost from the command line, using an user-friendly API for both Python and R.
+ 
+
+# **3. Comparision of CatBoost and other Boosting algorithms** 
+
+[Table of Contents](#0.1)
+
+
+- We have multiple boosting libraries like XGBoost, H2O and LightGBM and all of these perform well on variety of problems. 
+
+- CatBoost developer have compared the performance with competitors on standard ML datasets.
+
+- This comparision is depicted in the following diagram:
+
+
+
+![Comparision of CatBoost and other Boosting algorithms](https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/08/13153401/Screen-Shot-2017-08-13-at-3.33.33-PM-768x443.png)
+
+- The comparison above shows the log-loss value for test data and it is lowest in the case of CatBoost in most cases. It clearly signifies that CatBoost mostly performs better for both tuned and default models.
+
+- In addition to this, CatBoost does not require conversion of data set to any specific format like XGBoost and LightGBM.
+
+# **4. Implementation of CatBoost in Python** 
+
+[Table of Contents](#0.1)
+
+
+- Now, we will present implementation of CatBoost in Python.
+
+- The first step is to load the required libraries.
+
+### **4.1 Load libraries** 
+
+[Table of Contents](#0.1)
+
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# Any results you write to the current directory are saved as output.
+
+### **4.2 Read dataset** 
+
+[Table of Contents](#0.1)
+
+train_df = pd.read_csv('/kaggle/input/amazon-employee-access-challenge/train.csv')
+
+test_df = pd.read_csv('/kaggle/input/amazon-employee-access-challenge/test.csv')
+
+### **4.3 EDA** 
+
+
+[Table of Contents](#0.1)
+
+- Now, that we have imported our dataset, its time to gain some insights about our data.
+
+- Let's preview the dataset.
+
+### **Preview the dataset**
+
+train_df.head()
+
+test_df.head()
+
+### **View summary of dataframe**
+
+train_df.info()
+
+test_df.info()
+
+We can see that there are no missing values in the dataset.
+
+### **View unique values in dataset**
+
+train_df.nunique()
+
+test_df.nunique()
+
+### **Findings of EDA** 
+
+- All the features are categorical.
+
+- The categorical features have a lot of unique values, we won't use one hot encoding, but depending on the dataset it may be a good idea to adjust one_hot_max_size.
+
+- There are no missing values in the dataset.
+
+### **4.4 Data Preparation** 
+
+
+[Table of Contents](#0.1)
+
+### **Declare feature vector and target variable** 
+
+X = train_df.drop("ACTION", axis=1)
+y = train_df["ACTION"]
+
+
+### Categorical features declaration
+
+cat_features = list(range(0, X.shape[1]))
+print(cat_features)
+
+### 4.5 **Split data into train and validation set** 
+
+
+[Table of Contents](#0.1)
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=0)
+
+### **4.6 CatBoost implementation** 
+
+[Table of Contents](#0.1)
+
+from catboost import CatBoostClassifier
+
+clf = CatBoostClassifier(
+    iterations=5, 
+    learning_rate=0.1, 
+    #loss_function='CrossEntropy'
+)
+
+
+clf.fit(X_train, y_train, 
+        cat_features=cat_features, 
+        eval_set=(X_val, y_val), 
+        verbose=False
+)
+
+print('CatBoost model is fitted: ' + str(clf.is_fitted()))
+print('CatBoost model parameters:')
+print(clf.get_params())
+
+### **4.7 Stdout of the training**  
+
+[Table of Contents](#0.1)
+
+- **Stdout** stands for Standard Output in Python.
+
+from catboost import CatBoostClassifier
+clf = CatBoostClassifier(
+    iterations=10,
+#     verbose=5,
+)
+
+clf.fit(
+    X_train, y_train,
+    cat_features=cat_features,
+    eval_set=(X_val, y_val),
+)
+
+### **4.8 Model predictions** 
+
+[Table of Contents](#0.1)
+
+print(clf.predict_proba(data=X_val))
+
+print(clf.predict(data=X_val))
+
+### **4.9 Metrics calculation and graph plotting** 
+
+[Table of Contents](#0.1)
+
+from catboost import CatBoostClassifier
+
+clf = CatBoostClassifier(
+    iterations=50,
+    random_seed=42,
+    learning_rate=0.5,
+    custom_loss=['AUC', 'Accuracy']
+)
+
+clf.fit(
+    X_train, y_train,
+    cat_features=cat_features,
+    eval_set=(X_val, y_val),
+    verbose=False,
+    plot=True
+)
+
+# **5. Results and Conclusion**   
+
+[Table of Contents](#0.1)
+
+
+- In this kernel, we have discuss **CatBoost**, which is a high-performance open source library for gradient boosting on decision trees. 
+
+- We have also discuss the advantages of **CatBoost** library.
+
+- We have also present the comparision between **CatBoost** and other **Boosting** algorithms.
+
+- We have also present the baseline implementation of CatBoost in Python.
+
+So, now we will come to the end of this kernel.
+
+I hope you find this kernel useful and enjoyable.
+
+Your comments and feedback are most welcome.
+
+Thank you
